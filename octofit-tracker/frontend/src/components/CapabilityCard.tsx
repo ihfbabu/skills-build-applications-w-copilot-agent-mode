@@ -1,5 +1,4 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { getJson } from '../api/client.js';
 
 type ApiItem = Record<string, unknown>;
 type ResourceState =
@@ -10,19 +9,19 @@ type ResourceState =
 type Props = {
   title: string;
   description: string;
-  endpoint: string;
+  loadData: () => Promise<Record<string, unknown>>;
   resourceKey: string;
   emptyMessage: string;
   renderItem: (item: ApiItem, index: number) => ReactNode;
 };
 
-export function CapabilityCard({ title, description, endpoint, resourceKey, emptyMessage, renderItem }: Props) {
+export function CapabilityCard({ title, description, loadData, resourceKey, emptyMessage, renderItem }: Props) {
   const [state, setState] = useState<ResourceState>({ status: 'loading' });
 
   useEffect(() => {
     let cancelled = false;
     setState({ status: 'loading' });
-    getJson<Record<string, unknown>>(endpoint)
+    loadData()
       .then((response) => {
         const items = response[resourceKey];
         if (!Array.isArray(items)) throw new Error(`The response did not include ${resourceKey}`);
@@ -37,7 +36,7 @@ export function CapabilityCard({ title, description, endpoint, resourceKey, empt
         }
       });
     return () => { cancelled = true; };
-  }, [endpoint, resourceKey]);
+  }, [loadData, resourceKey]);
 
   return <section className="card h-100"><div className="card-body">
     <h2 className="h4">{title}</h2>
